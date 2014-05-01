@@ -1,8 +1,10 @@
 package com.jerry.dynaviewer.app;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.app.Activity;
+import android.view.View;
 
 public class CardListActivity extends Activity
         implements CardListFragment.Callbacks {
@@ -17,11 +19,16 @@ public class CardListActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_list);
 
-        if (findViewById(R.id.card_detail_container) != null) {
+        View detailContainer = findViewById(R.id.card_detail_container);
+
+        if ( detailContainer != null) {
+            detailContainer.getRootView().setBackgroundColor(Color.GRAY);
             ((CardListFragment) getFragmentManager()
                     .findFragmentById(R.id.card_list))
                     .setActivateOnItemClick(true);
         }
+
+
 
         // TODO: If exposing deep links into your app, handle intents here.
     }
