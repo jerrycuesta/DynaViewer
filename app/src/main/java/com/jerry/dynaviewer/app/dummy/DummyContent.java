@@ -25,9 +25,12 @@ public class DummyContent {
 
     static {
         // Add 3 sample items.
-        addItem(new DummyItem("1", "Item 1"));
-        addItem(new DummyItem("2", "Item 2"));
-        addItem(new DummyItem("3", "Item 3"));
+        addItem(new DummyItem("1", "Card001.xml"));
+        addItem(new DummyItem("2", "Card002.xml"));
+        addItem(new DummyItem("3", "Card003.xml"));
+        addItem(new DummyItem("4", "Card004.xml"));
+        addItem(new DummyItem("5", "Card005.xml"));
+        addItem(new DummyItem("6", "Card006.xml"));
     }
 
     private static void addItem(DummyItem item) {
