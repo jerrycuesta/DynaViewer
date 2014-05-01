@@ -77,14 +77,14 @@ public class DynaCard {
             SurfacePoints.add(new LoadPosPair(load, pos));
         }
 
-        DownholePoints = new ArrayList<LoadPosPair>(surfaceLoads.size());
+        DownholePoints = new ArrayList<LoadPosPair>(downholeLoads.size());
 
-        for (Map.Entry<Integer, Float> entry : surfaceLoads.entrySet()) {
+        for (Map.Entry<Integer, Float> entry : downholeLoads.entrySet()) {
             Integer index = entry.getKey();
-            assert (surfacePositions.containsKey(index));
+            assert (downholePositions.containsKey(index));
             Float load = entry.getValue();
-            Float pos = surfacePositions.get(index);
-            SurfacePoints.add(new LoadPosPair(load, pos));
+            Float pos = downholePositions.get(index);
+            DownholePoints.add(new LoadPosPair(load, pos));
         }
     }
 
@@ -170,11 +170,11 @@ public class DynaCard {
             if (elementName.startsWith(slPrefix)) {
                 AddFromDottedI(surfaceLoads, elementName, elementText, slPrefix);
             } else if (elementName.startsWith(spPrefix)) {
-                AddFromDottedI(surfacePositions, elementName, elementText, slPrefix);
+                AddFromDottedI(surfacePositions, elementName, elementText, spPrefix);
             } else if (elementName.startsWith(dlPrefix)) {
-                AddFromDottedI(downholeLoads, elementName, elementText, slPrefix);
+                AddFromDottedI(downholeLoads, elementName, elementText, dlPrefix);
             } else if (elementName.startsWith(dpPrefix)) {
-                AddFromDottedI(downholePositions, elementName, elementText, slPrefix);
+                AddFromDottedI(downholePositions, elementName, elementText, dpPrefix);
             } else {
                 Attributes.put(elementName, elementText);
             }
