@@ -1,6 +1,5 @@
 package com.jerry.dynaviewer.app;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.app.Activity;
@@ -14,6 +13,8 @@ public class CardListActivity extends Activity
      * device.
      */
 
+    CardListFragment listFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,16 +22,24 @@ public class CardListActivity extends Activity
 
         View detailContainer = findViewById(R.id.card_detail_container);
 
-        if ( detailContainer != null) {
+        if (detailContainer != null) {
             detailContainer.getRootView().setBackgroundColor(Color.GRAY);
-            ((CardListFragment) getFragmentManager()
-                    .findFragmentById(R.id.card_list))
-                    .setActivateOnItemClick(true);
+            listFragment = (CardListFragment) getFragmentManager().findFragmentById(R.id.card_list);
+            listFragment.setActivateOnItemClick(true);
         }
 
-
-
         // TODO: If exposing deep links into your app, handle intents here.
+    }
+
+
+    // called when activity is started. this after creation.
+    // force selection of the first list item (which would no want
+    // to be done in single fragment mode
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        listFragment.ChangeSelectedItem(0);
     }
 
     /**

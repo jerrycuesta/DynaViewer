@@ -70,20 +70,18 @@ public class CardListFragment extends ListFragment {
     public CardListFragment() {
     }
 
+    // called on fragment creation
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: replace with a real list adapter.
-//        setListAdapter(new ArrayAdapter<DummyContent.DummyItem>(
-//                getActivity(),
-//                android.R.layout.simple_list_item_activated_1,
-//                android.R.id.text1,
-//                DummyContent.ITEMS));
+        // create the adapter to the data
 
         ArrayAdapter<DummyContent.DummyItem> adapter = new ArrayAdapter<DummyContent.DummyItem>(
                 getActivity(),android.R.layout.simple_list_item_activated_1, DummyContent.ITEMS){
 
+            // override getView to return the correct view
             @Override
             public View getView(int position, View convertView,
                                 ViewGroup parent) {
@@ -96,20 +94,22 @@ public class CardListFragment extends ListFragment {
                 return view;
             }
         };
-        /*SET THE ADAPTER TO LISTVIEW*/
-        setListAdapter(adapter);
 
-        //setSelection(0);
+        setListAdapter(adapter);
     }
 
-//
-//    @Override
-//    public void onActivityCreated(Bundle savedInstanceState) {
-//        ListView listView = getListView(); //EX:
-//        listView.setSelection(0);
-//        super.onActivityCreated(savedInstanceState);
-//    }
+    // called to set the current item in the list view
+    // calls back to report change
 
+    void ChangeSelectedItem(int item)
+    {
+        getListView().setSelection(item);
+        setActivatedPosition(item);
+        mCallbacks.onItemSelected(DummyContent.ITEMS.get(item).id);
+    }
+
+
+    // called when the fragment is attached to an activity
 
     @Override
     public void onAttach(Activity activity) {
@@ -123,6 +123,9 @@ public class CardListFragment extends ListFragment {
         mCallbacks = (Callbacks) activity;
     }
 
+
+    // called when the fragment is dettached to an activity
+
     @Override
     public void onDetach() {
         super.onDetach();
@@ -131,6 +134,8 @@ public class CardListFragment extends ListFragment {
         mCallbacks = sDummyCallbacks;
     }
 
+
+    // hook into list item click event and inform parent activity
     @Override
     public void onListItemClick(ListView listView, View view, int position, long id) {
         super.onListItemClick(listView, view, position, id);
@@ -140,6 +145,7 @@ public class CardListFragment extends ListFragment {
         mCallbacks.onItemSelected(DummyContent.ITEMS.get(position).id);
     }
 
+    // save state so that when resumed the same item is selected
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
