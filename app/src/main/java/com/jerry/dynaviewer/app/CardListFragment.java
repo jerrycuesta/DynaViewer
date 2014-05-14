@@ -1,6 +1,7 @@
 package com.jerry.dynaviewer.app;
 
 import android.app.Activity;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.app.ListFragment;
@@ -11,7 +12,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 
-import com.jerry.dynaviewer.app.dummy.DummyContent;
+import com.jerry.dynacard.DynaCard;
+
+import java.io.InputStream;
+import java.util.ArrayList;
 
 /**
  * A list fragment representing a list of Cards. This fragment
@@ -70,6 +74,22 @@ public class CardListFragment extends ListFragment {
     public CardListFragment() {
     }
 
+    ArrayList<String> cardsNames = new ArrayList<String>();
+
+    public void LoadCards() {
+        AssetManager assets = getActivity().getApplicationContext().getAssets();
+        try {
+            String[] files = assets.list("");
+            for (String item : files) {
+                if (item.toLowerCase().endsWith(".xml"))
+                {
+                    cardsNames.add(item);
+                }
+            }
+        } catch (Exception ex) {
+        }
+    }
+
     // called on fragment creation
 
     @Override
@@ -78,8 +98,8 @@ public class CardListFragment extends ListFragment {
 
         // create the adapter to the data
 
-        ArrayAdapter<DummyContent.DummyItem> adapter = new ArrayAdapter<DummyContent.DummyItem>(
-                getActivity(),android.R.layout.simple_list_item_activated_1, DummyContent.ITEMS){
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                getActivity(),android.R.layout.simple_list_item_activated_1, cardsNames){
 
             // override getView to return the correct view
             @Override
@@ -105,7 +125,7 @@ public class CardListFragment extends ListFragment {
     {
         getListView().setSelection(item);
         setActivatedPosition(item);
-        mCallbacks.onItemSelected(DummyContent.ITEMS.get(item).id);
+        mCallbacks.onItemSelected(cardsNames.get(item));
     }
 
 
@@ -121,6 +141,7 @@ public class CardListFragment extends ListFragment {
         }
 
         mCallbacks = (Callbacks) activity;
+        LoadCards();
     }
 
 
@@ -142,7 +163,7 @@ public class CardListFragment extends ListFragment {
 
         // Notify the active callbacks interface (the activity, if the
         // fragment is attached to one) that an item has been selected.
-        mCallbacks.onItemSelected(DummyContent.ITEMS.get(position).id);
+        mCallbacks.onItemSelected(cardsNames.get(position));
     }
 
     // save state so that when resumed the same item is selected
