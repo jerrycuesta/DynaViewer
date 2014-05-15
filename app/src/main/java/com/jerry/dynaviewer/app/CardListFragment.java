@@ -12,9 +12,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 
-import com.jerry.dynacard.DynaCard;
-
-import java.io.InputStream;
 import java.util.ArrayList;
 
 /**
@@ -74,23 +71,52 @@ public class CardListFragment extends ListFragment {
     public CardListFragment() {
     }
 
-    ArrayList<String> cardsNames = new ArrayList<String>();
+    ArrayList<String> cardNames = new ArrayList<String>();
 
-    public void LoadCards() {
+    public void LoadLocalCards() {
+        cardNames.clear();
         AssetManager assets = getActivity().getApplicationContext().getAssets();
         try {
             String[] files = assets.list("");
             for (String item : files) {
                 if (item.toLowerCase().endsWith(".xml"))
                 {
-                    cardsNames.add(item);
+                    cardNames.add(item);
                 }
             }
         } catch (Exception ex) {
         }
+
+        if (adapter!=null) {
+            adapter.notifyDataSetChanged();
+            ChangeSelectedItem(0);
+        }
+    }
+
+    public void LoadRemoteCards() {
+        cardNames.clear();
+        final String[] parseKeys = {
+                "i5BgALrYsg", "QlEt2tO2Bq", "quDe6WaRr5", "B07he3MbB0","t9pI4llTpR",
+                "7An7eE5VW2","1uRkcj2V4C","cznt6i2tPG","kU1GPSs2qt","4pgzNZT10m",
+                "p6WqnxlrhX","3PC5m6vB8C","6Nz5ELxdaY","2vtZVBvWDW","O5gkXfjoOB",
+                "vTH1xzdiPs","ay6xRBkkuJ","wJY7GEPJYK","I36CnLBxQL","r7hTSWKYEy",
+                "NrxGMMgTuC","EnLmMfcYef","5Z2UCtqdwj","mVivHmDBOQ","tYeeCFULxY",
+                "GHRWiLOpKW","Lye9FWyhYu","i2FyackdQI","Z8rziqiP0w","EpGgYNVBwu",
+                "bUWZlPstDg","HmZvaFXKpl","i9bjUAUxst" };
+
+        for (String name  : parseKeys) {
+            cardNames.add(name);
+        }
+
+        if (adapter!=null) {
+            adapter.notifyDataSetChanged();
+            ChangeSelectedItem(0);
+        }
     }
 
     // called on fragment creation
+
+    ArrayAdapter<String> adapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,16 +124,18 @@ public class CardListFragment extends ListFragment {
 
         // create the adapter to the data
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getActivity(),android.R.layout.simple_list_item_activated_1, cardsNames){
+        LoadLocalCards();
+
+        adapter = new ArrayAdapter<String>(
+                getActivity(), android.R.layout.simple_list_item_activated_1, cardNames) {
 
             // override getView to return the correct view
             @Override
             public View getView(int position, View convertView,
                                 ViewGroup parent) {
-                View view =super.getView(position, convertView, parent);
+                View view = super.getView(position, convertView, parent);
 
-                TextView textView=(TextView) view.findViewById(android.R.id.text1);
+                TextView textView = (TextView) view.findViewById(android.R.id.text1);
 
                 textView.setTextColor(Color.WHITE);
 
@@ -125,7 +153,7 @@ public class CardListFragment extends ListFragment {
     {
         getListView().setSelection(item);
         setActivatedPosition(item);
-        mCallbacks.onItemSelected(cardsNames.get(item));
+        mCallbacks.onItemSelected(cardNames.get(item));
     }
 
 
@@ -141,7 +169,7 @@ public class CardListFragment extends ListFragment {
         }
 
         mCallbacks = (Callbacks) activity;
-        LoadCards();
+        LoadRemoteCards();
     }
 
 
@@ -163,7 +191,7 @@ public class CardListFragment extends ListFragment {
 
         // Notify the active callbacks interface (the activity, if the
         // fragment is attached to one) that an item has been selected.
-        mCallbacks.onItemSelected(cardsNames.get(position));
+        mCallbacks.onItemSelected(cardNames.get(position));
     }
 
     // save state so that when resumed the same item is selected

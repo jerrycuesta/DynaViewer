@@ -17,9 +17,14 @@ import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.XYPlot;
 import com.androidplot.xy.XYSeries;
 import com.jerry.dynacard.DynaCard;
+import com.parse.GetCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class CardDetailFragment extends Fragment {
     /**
@@ -36,24 +41,12 @@ public class CardDetailFragment extends Fragment {
     public CardDetailFragment() {
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-//        if (getArguments().containsKey(ARG_ITEM_ID)) {
-//            mId = getArguments().getString(ARG_ITEM_ID);
-//        }
-    }
-
     // called to set the current item in the list view
-    // calls back to report change
 
     void SetBackGroundColor(int c) {
         getView().setBackgroundColor(c);
     }
 
-
-    // AsyncTask<Params, Progress, Result>
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -75,46 +68,79 @@ public class CardDetailFragment extends Fragment {
         protected DynaCard doInBackground(String... urls) {
             String Filename = urls[0];
             AssetManager assets = getActivity().getApplicationContext().getAssets();
-            DynaCard card = new DynaCard("");
             try {
+                DynaCard card = new DynaCard("");
                 InputStream inString = assets.open(Filename);
                 card.Load(inString);
+                return card;
             } catch (Exception ex) {
-                // TODO: propogate error
                 StringBuilder msg = new StringBuilder();
                 msg.append(getString(R.string.error_msg));
                 msg.append(System.getProperty ("line.separator"));
                 msg.append(ex.getMessage());
                 status = msg.toString();
+                return null;
             }
-            return card;
         }
 
         @Override
         protected void onPostExecute(DynaCard result) {
-            mPlot.clear();
-            if (!status.equals(""))
-            {
-                mMessageView.setText(status);
-                mMessageView.setVisibility(View.VISIBLE);
-            }
-            else {
-                PlotCard(result);
-            }
-            mPlot.redraw();
+            onCardLoaded(result);
         }
     }
 
-    public void setCard(String cardId)
+    private void onCardLoaded(DynaCard card)
+    {
+        mPlot.clear();
+        if (!status.equals(""))
+        {
+            mMessageView.setText(status);
+            mMessageView.setVisibility(View.VISIBLE);
+        }
+        else {
+            PlotCard(card);
+        }
+        mPlot.redraw();
+
+    }
+
+    public void setCard(String cardId, boolean isLocal)
     {
         mId = cardId;
-        mPlot.setTitle(getString(R.string.surface_card) + mId);
+        mPlot.setTitle(getString(R.string.surface_card) + " " +  mId);
 
         mMessageView.setVisibility(View.INVISIBLE);
         status = "";
 
-        LoadCardTask task = new LoadCardTask();
-        task.execute(mId);
+        if (isLocal) {
+            LoadCardTask task = new LoadCardTask();
+            task.execute(mId);
+        }
+        else {
+            ParseQuery<ParseObject> query = ParseQuery.getQuery("DynaCard");
+            query.getInBackground(mId, new GetCallback<ParseObject>() {
+                public void done(ParseObject TestObject, ParseException e) {
+                    if (e == null) {
+                        String text = TestObject.getString("text");
+                        DynaCard card = new DynaCard(text);
+                        try {
+                            card.Load();
+                            onCardLoaded(card);
+                        }
+                        catch (Exception ex)
+                        {
+                            StringBuilder msg = new StringBuilder();
+                            msg.append(getString(R.string.error_msg));
+                            msg.append(System.getProperty ("line.separator"));
+                            msg.append(ex.getMessage());
+                            status = msg.toString();
+                        }
+                    } else {
+                        status = e.getMessage();
+                    }
+                }
+            });
+        }
     }
 
 //    private class LoadCardTaskSync

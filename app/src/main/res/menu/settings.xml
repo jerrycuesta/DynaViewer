@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.jerry.settings.app.MainActivity" >
     <item android:id="@+id/action_local_content"
-        android:title="Use Local Content"
+        android:title="Use Remote Content"
         android:orderInCategory="100"
         />
 </menu>

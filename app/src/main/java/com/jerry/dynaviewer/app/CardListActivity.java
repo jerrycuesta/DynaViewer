@@ -7,10 +7,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.parse.Parse;
+
 public class CardListActivity extends Activity
         implements CardListFragment.Callbacks {
 
-    boolean useLocalContent = true;
+    boolean useingLocalContent = true;
 
     CardListFragment listFragment;
     CardDetailFragment detailFragment;
@@ -26,6 +28,7 @@ public class CardListActivity extends Activity
 
         View rootView = findViewById(R.id.root_view);
         rootView.setBackgroundColor(Color.GRAY);
+        Parse.initialize(this, "dAjQJONfviTs3J5qJtAMFj3ckOkP1jputnoZ7juq", "NpQ3JuMrqR0Gp4SioUp3CXBfvudu8LbKCBr8phPw");
     }
 
 
@@ -46,7 +49,7 @@ public class CardListActivity extends Activity
      */
     @Override
     public void onItemSelected(String id) {
-        detailFragment.setCard(id);
+        detailFragment.setCard(id, useingLocalContent);
     }
 
     @Override
@@ -63,10 +66,16 @@ public class CardListActivity extends Activity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_local_content) {
-            if (useLocalContent)
-                item.setTitle("Use Remote Content");
-            else
+            if (useingLocalContent) {
+                item.setTitle("Use Remote  Content");
+                useingLocalContent = false;
+                listFragment.LoadRemoteCards();
+            } else {
                 item.setTitle("Use Local Content");
+                useingLocalContent = true;
+                listFragment.LoadLocalCards();
+            }
+
             return true;
         }
         return super.onOptionsItemSelected(item);
