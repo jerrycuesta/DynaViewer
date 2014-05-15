@@ -8,27 +8,20 @@ import android.view.View;
 public class CardListActivity extends Activity
         implements CardListFragment.Callbacks {
 
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
-
     CardListFragment listFragment;
+    CardDetailFragment detailFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_card_list);
+        setContentView(R.layout.activity_card_twopane);
 
-        View detailContainer = findViewById(R.id.card_detail_container);
+        listFragment = (CardListFragment) getFragmentManager().findFragmentById(R.id.card_list);
+        listFragment.setActivateOnItemClick(true);
+        detailFragment = (CardDetailFragment) getFragmentManager().findFragmentById(R.id.card_detail_container);
 
-        if (detailContainer != null) {
-            detailContainer.getRootView().setBackgroundColor(Color.GRAY);
-            listFragment = (CardListFragment) getFragmentManager().findFragmentById(R.id.card_list);
-            listFragment.setActivateOnItemClick(true);
-        }
-
-        // TODO: If exposing deep links into your app, handle intents here.
+        View rootView = findViewById(R.id.root_view);
+        rootView.setBackgroundColor(Color.GRAY);
     }
 
 
@@ -40,6 +33,7 @@ public class CardListActivity extends Activity
     protected void onStart() {
         super.onStart();
         listFragment.ChangeSelectedItem(0);
+        detailFragment.SetBackGroundColor(Color.GRAY);
     }
 
     /**
@@ -48,16 +42,17 @@ public class CardListActivity extends Activity
      */
     @Override
     public void onItemSelected(String id) {
+        detailFragment.setCard(id);
+    }
 
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a
             // fragment transaction.
-            Bundle arguments = new Bundle();
-            arguments.putString(CardDetailFragment.ARG_ITEM_ID, id);
-            CardDetailFragment fragment = new CardDetailFragment();
-            fragment.setArguments(arguments);
-            getFragmentManager().beginTransaction()
-                    .replace(R.id.card_detail_container, fragment)
-                    .commit();
-    }
+//            Bundle arguments = new Bundle();
+//            arguments.putString(CardDetailFragment.ARG_ITEM_ID, id);
+//            detailFragment = new CardDetailFragment();
+//            detailFragment.setArguments(arguments);
+//            getFragmentManager().beginTransaction()
+//                    .replace(R.id.card_detail_container, detailFragment)
+//                    .commit();
 }

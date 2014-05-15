@@ -1,14 +1,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_view"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
     android:baselineAligned="false"
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
     android:showDividers="middle"
     tools:context="com.jerry.dynaviewer.app.CardListActivity">
+
+    <!--
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    -->
+
 
     <fragment
         android:id="@+id/card_list"
@@ -18,10 +23,12 @@
         android:layout_weight="1"
         tools:layout="@android:layout/list_content" />
 
-    <FrameLayout
+    <fragment
         android:id="@+id/card_detail_container"
+        android:name="com.jerry.dynaviewer.app.CardDetailFragment"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="3" />
+        android:layout_weight="3"
+        tools:layout="@+id/card_detail"/>
 
 </LinearLayout>

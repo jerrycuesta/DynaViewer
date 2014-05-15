@@ -20,12 +20,6 @@ import com.jerry.dynacard.DynaCard;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-/**
- * A fragment representing a single Card detail screen.
- * This fragment is either contained in a {@link CardListActivity}
- * in two-pane mode (on tablets) or a {@link CardDetailActivity}
- * on handsets.
- */
 public class CardDetailFragment extends Fragment {
     /**
      * The fragment argument representing the item ID that this fragment
@@ -43,10 +37,18 @@ public class CardDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
-            mId = getArguments().getString(ARG_ITEM_ID);
-        }
+//        if (getArguments().containsKey(ARG_ITEM_ID)) {
+//            mId = getArguments().getString(ARG_ITEM_ID);
+//        }
     }
+
+    // called to set the current item in the list view
+    // calls back to report change
+
+    void SetBackGroundColor(int c) {
+        getView().setBackgroundColor(c);
+    }
+
 
     // AsyncTask<Params, Progress, Result>
 
@@ -57,13 +59,7 @@ public class CardDetailFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_card_detail, container, false);
 
         mPlot = (XYPlot) rootView.findViewById(R.id.cardPlot);
-        mPlot.setTitle("Surface Card " + mId);
         mPlot.getGraphWidget().getGridBackgroundPaint().setColor(Color.GRAY);
-
-        LoadCardTask task = new LoadCardTask();
-        task.execute(mId);
-
-        //new LoadCardTaskSync().Load(mItem);
 
         return rootView;
     }
@@ -90,6 +86,16 @@ public class CardDetailFragment extends Fragment {
             PlotCard(result);
             mPlot.redraw();
         }
+    }
+
+    public void setCard(String cardId)
+    {
+        mId = cardId;
+        mPlot.setTitle("Surface Card " + mId);
+        LoadCardTask task = new LoadCardTask();
+        task.execute(mId);
+
+        //new LoadCardTaskSync().Load(mItem);
     }
 
     private class LoadCardTaskSync
@@ -132,6 +138,7 @@ public class CardDetailFragment extends Fragment {
                 yValues,
                 seriesTitle); // Set the display title of the series
 
+        mPlot.clear();
 
         // Create a formatter to use for drawing a series using LineAndPointRenderer
         // and configure it from xml:
@@ -139,7 +146,6 @@ public class CardDetailFragment extends Fragment {
         series1Format.setPointLabelFormatter(new PointLabelFormatter());
         series1Format.configure(context,
                 R.xml.line_point_formatter_with_plf1);
-
 
         mPlot.addSeries(
                 series1,                            /* #1896BD */
