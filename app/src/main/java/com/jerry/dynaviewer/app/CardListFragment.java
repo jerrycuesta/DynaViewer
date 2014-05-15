@@ -10,9 +10,17 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A list fragment representing a list of Cards. This fragment
@@ -51,7 +59,7 @@ public class CardListFragment extends ListFragment {
         /**
          * Callback for when an item has been selected.
          */
-        public void onItemSelected(String id);
+        public void onItemSelected(ParseObject obj);
     }
 
     /**
@@ -60,7 +68,7 @@ public class CardListFragment extends ListFragment {
      */
     private static Callbacks sDummyCallbacks = new Callbacks() {
         @Override
-        public void onItemSelected(String id) {
+        public void onItemSelected(ParseObject obj) {
         }
     };
 
@@ -71,52 +79,91 @@ public class CardListFragment extends ListFragment {
     public CardListFragment() {
     }
 
-    ArrayList<String> cardNames = new ArrayList<String>();
+    // TODO: use adapter from ParseObject instead of separate array.
+    ArrayList<ParseObject> cardNames = new ArrayList<ParseObject>();
+    ArrayList<String> cardTitles = new ArrayList<String>();
+    ArrayAdapter<String> adapter;
 
     public void LoadLocalCards() {
         cardNames.clear();
+        cardTitles.clear();
+
         AssetManager assets = getActivity().getApplicationContext().getAssets();
         try {
             String[] files = assets.list("");
             for (String item : files) {
                 if (item.toLowerCase().endsWith(".xml"))
                 {
-                    cardNames.add(item);
+                    ParseObject obj = new ParseObject(ParseKeys.PARSE_CLASS);
+                    obj.put(ParseKeys.PARSE_KEY_FILENAME, item);
+                    cardNames.add(obj);
+                    cardTitles.add(item);
                 }
             }
         } catch (Exception ex) {
         }
 
         if (adapter!=null) {
+            System.out.println("LoadRemoteCards::SetAdapter");
+            System.out.println("cardTitles: " + Integer.toString(cardTitles.size()));
+            System.out.println("cardNames: " + Integer.toString(cardNames.size()));
+
             adapter.notifyDataSetChanged();
             ChangeSelectedItem(0);
         }
     }
 
     public void LoadRemoteCards() {
+        System.out.println("LoadRemoteCards: ");
+
         cardNames.clear();
-        final String[] parseKeys = {
-                "i5BgALrYsg", "QlEt2tO2Bq", "quDe6WaRr5", "B07he3MbB0","t9pI4llTpR",
-                "7An7eE5VW2","1uRkcj2V4C","cznt6i2tPG","kU1GPSs2qt","4pgzNZT10m",
-                "p6WqnxlrhX","3PC5m6vB8C","6Nz5ELxdaY","2vtZVBvWDW","O5gkXfjoOB",
-                "vTH1xzdiPs","ay6xRBkkuJ","wJY7GEPJYK","I36CnLBxQL","r7hTSWKYEy",
-                "NrxGMMgTuC","EnLmMfcYef","5Z2UCtqdwj","mVivHmDBOQ","tYeeCFULxY",
-                "GHRWiLOpKW","Lye9FWyhYu","i2FyackdQI","Z8rziqiP0w","EpGgYNVBwu",
-                "bUWZlPstDg","HmZvaFXKpl","i9bjUAUxst" };
+        cardTitles.clear();
 
-        for (String name  : parseKeys) {
-            cardNames.add(name);
-        }
+//        final String[] parseKeys = {
+//                "i5BgALrYsg", "QlEt2tO2Bq", "quDe6WaRr5", "B07he3MbB0","t9pI4llTpR",
+//                "7An7eE5VW2","1uRkcj2V4C","cznt6i2tPG","kU1GPSs2qt","4pgzNZT10m",
+//                "p6WqnxlrhX","3PC5m6vB8C","6Nz5ELxdaY","2vtZVBvWDW","O5gkXfjoOB",
+//                "vTH1xzdiPs","ay6xRBkkuJ","wJY7GEPJYK","I36CnLBxQL","r7hTSWKYEy",
+//                "NrxGMMgTuC","EnLmMfcYef","5Z2UCtqdwj","mVivHmDBOQ","tYeeCFULxY",
+//                "GHRWiLOpKW","Lye9FWyhYu","i2FyackdQI","Z8rziqiP0w","EpGgYNVBwu",
+//                "bUWZlPstDg","HmZvaFXKpl","i9bjUAUxst" };
+//        for (String name  : parseKeys) {
+//            cardNames.add(name);
+//        }
 
-        if (adapter!=null) {
-            adapter.notifyDataSetChanged();
-            ChangeSelectedItem(0);
-        }
+        System.out.println("LoadRemoteCards:...");
+
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(ParseKeys.PARSE_CLASS);
+        query.selectKeys(Arrays.asList("facility", "index"));
+        query.findInBackground(new FindCallback<ParseObject>() {
+            public void done(List<ParseObject> results, ParseException e) {
+                if (e == null) {
+                    for (ParseObject obj : results) {
+                        cardNames.add(obj);
+                        String facility = obj.getString(ParseKeys.PARSE_KEY_FACILITY);
+                        Number index = obj.getNumber(ParseKeys.PARSE_KEY_INDEX);
+                        String title = facility + ":" + index.toString();
+                        cardTitles.add(title);
+                    }
+
+                    if (adapter!=null) {
+                        System.out.println("LoadRemoteCards::SetAdapter");
+                        System.out.println("cardTitles: " + Integer.toString(cardTitles.size()));
+                        System.out.println("cardNames: " + Integer.toString(cardNames.size()));
+
+                        adapter.notifyDataSetChanged();
+                        ChangeSelectedItem(0);
+                    }
+
+                } else {
+                    Toast.makeText(getActivity(), "Failed to Get Card List", Toast.LENGTH_LONG).show();
+                    System.out.println("LoadRemoteCards:" + "Parse Exception: " + e.getMessage());
+                }
+            }
+        });
     }
 
     // called on fragment creation
-
-    ArrayAdapter<String> adapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -127,18 +174,15 @@ public class CardListFragment extends ListFragment {
         LoadLocalCards();
 
         adapter = new ArrayAdapter<String>(
-                getActivity(), android.R.layout.simple_list_item_activated_1, cardNames) {
+                getActivity(), android.R.layout.simple_list_item_activated_1, cardTitles) {
 
             // override getView to return the correct view
             @Override
             public View getView(int position, View convertView,
                                 ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-
                 TextView textView = (TextView) view.findViewById(android.R.id.text1);
-
                 textView.setTextColor(Color.WHITE);
-
                 return view;
             }
         };
@@ -151,9 +195,13 @@ public class CardListFragment extends ListFragment {
 
     void ChangeSelectedItem(int item)
     {
+        System.out.println("ChangeSelectedItem: " + Integer.toString(item));
+        System.out.println("cardTitles: " + Integer.toString(cardTitles.size()));
+        System.out.println("cardNames: " + Integer.toString(cardNames.size()));
         getListView().setSelection(item);
         setActivatedPosition(item);
-        mCallbacks.onItemSelected(cardNames.get(item));
+        ParseObject obj = cardNames.get(item);
+        mCallbacks.onItemSelected(obj);
     }
 
 
@@ -169,7 +217,7 @@ public class CardListFragment extends ListFragment {
         }
 
         mCallbacks = (Callbacks) activity;
-        LoadRemoteCards();
+        //LoadRemoteCards();
     }
 
 

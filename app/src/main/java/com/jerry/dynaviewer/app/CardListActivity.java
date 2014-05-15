@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.parse.Parse;
+import com.parse.ParseObject;
 
 public class CardListActivity extends Activity
         implements CardListFragment.Callbacks {
@@ -20,6 +21,9 @@ public class CardListActivity extends Activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Parse.initialize(   this,
+                            "dAjQJONfviTs3J5qJtAMFj3ckOkP1jputnoZ7juq",
+                            "NpQ3JuMrqR0Gp4SioUp3CXBfvudu8LbKCBr8phPw");
         setContentView(R.layout.activity_card_twopane);
 
         listFragment = (CardListFragment) getFragmentManager().findFragmentById(R.id.card_list);
@@ -28,7 +32,6 @@ public class CardListActivity extends Activity
 
         View rootView = findViewById(R.id.root_view);
         rootView.setBackgroundColor(Color.GRAY);
-        Parse.initialize(this, "dAjQJONfviTs3J5qJtAMFj3ckOkP1jputnoZ7juq", "NpQ3JuMrqR0Gp4SioUp3CXBfvudu8LbKCBr8phPw");
     }
 
 
@@ -48,8 +51,8 @@ public class CardListActivity extends Activity
      * indicating that the item with the given ID was selected.
      */
     @Override
-    public void onItemSelected(String id) {
-        detailFragment.setCard(id, useingLocalContent);
+    public void onItemSelected(ParseObject obj) {
+        detailFragment.setCard(obj, useingLocalContent);
     }
 
     @Override
@@ -67,11 +70,11 @@ public class CardListActivity extends Activity
         int id = item.getItemId();
         if (id == R.id.action_local_content) {
             if (useingLocalContent) {
-                item.setTitle("Use Remote  Content");
+                item.setTitle("Use Local  Content");
                 useingLocalContent = false;
                 listFragment.LoadRemoteCards();
             } else {
-                item.setTitle("Use Local Content");
+                item.setTitle("Use Remote Content");
                 useingLocalContent = true;
                 listFragment.LoadLocalCards();
             }

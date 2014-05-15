@@ -104,9 +104,13 @@ public class CardDetailFragment extends Fragment {
 
     }
 
-    public void setCard(String cardId, boolean isLocal)
+    public void setCard(ParseObject obj, boolean isLocal)
     {
-        mId = cardId;
+        if (isLocal)
+            mId = obj.getString(ParseKeys.PARSE_KEY_FILENAME);
+        else
+            mId = obj.getObjectId();
+
         mPlot.setTitle(getString(R.string.surface_card) + " " +  mId);
 
         mMessageView.setVisibility(View.INVISIBLE);
@@ -119,9 +123,9 @@ public class CardDetailFragment extends Fragment {
         else {
             ParseQuery<ParseObject> query = ParseQuery.getQuery("DynaCard");
             query.getInBackground(mId, new GetCallback<ParseObject>() {
-                public void done(ParseObject TestObject, ParseException e) {
+                public void done(ParseObject obj, ParseException e) {
                     if (e == null) {
-                        String text = TestObject.getString("text");
+                        String text = obj.getString("text");
                         DynaCard card = new DynaCard(text);
                         try {
                             card.Load();
