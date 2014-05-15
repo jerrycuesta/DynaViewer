@@ -9,12 +9,6 @@
     android:showDividers="middle"
     tools:context="com.jerry.dynaviewer.app.CardListActivity">
 
-    <!--
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    -->
-
-
     <fragment
         android:id="@+id/card_list"
         android:name="com.jerry.dynaviewer.app.CardListFragment"
