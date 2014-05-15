@@ -3,5 +3,7 @@
 
     <string name="app_name">DynaViewer</string>
     <string name="title_card_detail">Card Detail</string>
+    <string name="error_msg">Error loading card</string>
+    <string name="surface_card">Surface Card </string>
 
 </resources>

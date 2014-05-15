@@ -9,6 +9,7 @@ import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
@@ -29,6 +30,8 @@ public class CardDetailFragment extends Fragment {
 
     private XYPlot mPlot;
     private String mId;
+    private String status = "";
+    private TextView mMessageView;
 
     public CardDetailFragment() {
     }
@@ -61,6 +64,9 @@ public class CardDetailFragment extends Fragment {
         mPlot = (XYPlot) rootView.findViewById(R.id.cardPlot);
         mPlot.getGraphWidget().getGridBackgroundPaint().setColor(Color.GRAY);
 
+        mMessageView = (TextView) rootView.findViewById(R.id.cardStatus);
+        mMessageView.setVisibility(View.INVISIBLE);
+
         return rootView;
     }
 
@@ -73,17 +79,28 @@ public class CardDetailFragment extends Fragment {
             try {
                 InputStream inString = assets.open(Filename);
                 card.Load(inString);
-                StringBuilder line = new StringBuilder("Dynacard: ");
             } catch (Exception ex) {
                 // TODO: propogate error
-                //Toast.makeText(getActivity().getApplicationContext(), "Exception loading card " + mItem, Toast.LENGTH_SHORT).show();
+                StringBuilder msg = new StringBuilder();
+                msg.append(getString(R.string.error_msg));
+                msg.append(System.getProperty ("line.separator"));
+                msg.append(ex.getMessage());
+                status = msg.toString();
             }
             return card;
         }
 
         @Override
         protected void onPostExecute(DynaCard result) {
-            PlotCard(result);
+            mPlot.clear();
+            if (!status.equals(""))
+            {
+                mMessageView.setText(status);
+                mMessageView.setVisibility(View.VISIBLE);
+            }
+            else {
+                PlotCard(result);
+            }
             mPlot.redraw();
         }
     }
@@ -91,29 +108,31 @@ public class CardDetailFragment extends Fragment {
     public void setCard(String cardId)
     {
         mId = cardId;
-        mPlot.setTitle("Surface Card " + mId);
+        mPlot.setTitle(getString(R.string.surface_card) + mId);
+
+        mMessageView.setVisibility(View.INVISIBLE);
+        status = "";
+
         LoadCardTask task = new LoadCardTask();
         task.execute(mId);
-
-        //new LoadCardTaskSync().Load(mItem);
     }
 
-    private class LoadCardTaskSync
-    {
-        protected void Load(String Filename) {
-            AssetManager assets = getActivity().getApplicationContext().getAssets();
-            DynaCard card = new DynaCard("");
-            try {
-                InputStream inString = assets.open(Filename);
-                card.Load(inString);
-                StringBuilder line = new StringBuilder("Dynacard: ");
-            } catch (Exception ex) {
-                // TODO: propogate error
-                //Toast.makeText(getActivity().getApplicationContext(), "Exception loading card " + mItem, Toast.LENGTH_SHORT).show();
-            }
-            PlotCard(card);
-        }
-    }
+//    private class LoadCardTaskSync
+//    {
+//        protected void Load(String Filename) {
+//            AssetManager assets = getActivity().getApplicationContext().getAssets();
+//            DynaCard card = new DynaCard("");
+//            try {
+//                InputStream inString = assets.open(Filename);
+//                card.Load(inString);
+//                StringBuilder line = new StringBuilder("Dynacard: ");
+//            } catch (Exception ex) {
+//                // TODO: propogate error
+//                //Toast.makeText(getActivity().getApplicationContext(), "Exception loading card " + mItem, Toast.LENGTH_SHORT).show();
+//            }
+//            PlotCard(card);
+//        }
+//    }
 
     // Plot the card
 
@@ -137,8 +156,6 @@ public class CardDetailFragment extends Fragment {
                 xValues,
                 yValues,
                 seriesTitle); // Set the display title of the series
-
-        mPlot.clear();
 
         // Create a formatter to use for drawing a series using LineAndPointRenderer
         // and configure it from xml:
