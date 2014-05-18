@@ -5,56 +5,75 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import com.parse.Parse;
 import com.parse.ParseObject;
 
-public class CardListActivity extends Activity
-        implements CardListFragment.Callbacks {
+// CardListActivity: Main (and only activity)
+// delegates work to fragments and acts and intermediary
+//      for communication between fragments
+// handles options menu
 
-    boolean useingLocalContent = true;
+public class CardListActivity extends Activity
+        implements CardListFragment.OnItemChanged {
 
     CardListFragment listFragment;
     CardDetailFragment detailFragment;
 
+    // options menu flag on whether content comes from local files or from Parse
+    boolean usingLocalContent = true;
+
+    // onCreate: Called on Activity Creation
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //  Initialize Parse Keys
         Parse.initialize(   this,
-                            "dAjQJONfviTs3J5qJtAMFj3ckOkP1jputnoZ7juq",
-                            "NpQ3JuMrqR0Gp4SioUp3CXBfvudu8LbKCBr8phPw");
+                            ParseKeys.ParseApplicationID,
+                            ParseKeys.ParseClientKey);
+
+        // set view
         setContentView(R.layout.activity_card_twopane);
 
-        listFragment = (CardListFragment) getFragmentManager().findFragmentById(R.id.card_list);
-        listFragment.setActivateOnItemClick(true);
-        detailFragment = (CardDetailFragment) getFragmentManager().findFragmentById(R.id.card_detail_container);
+        // create list and detail fragments
+        listFragment = (CardListFragment) getFragmentManager().
+                                    findFragmentById(R.id.card_list);
 
-        View rootView = findViewById(R.id.root_view);
-        rootView.setBackgroundColor(Color.GRAY);
+        //listFragment.setActivateOnItemClick(true);
+        detailFragment = (CardDetailFragment) getFragmentManager().
+                                    findFragmentById(R.id.card_detail_container);
+
+        // set background
+        // TODO: move to layout?
+        findViewById(R.id.root_view).setBackgroundColor(Color.GRAY);
     }
 
 
-    // called when activity is started. this after creation.
-    // force selection of the first list item (which would no want
+    // onStart:  called when activity is started. (after onCreate)
+    // force selection of the first list item (which would not want
     // to be done in single fragment mode
-
     @Override
     protected void onStart() {
         super.onStart();
+
+        // TODO: Move the set of initial item in CardListFragment class?
         listFragment.ChangeSelectedItem(0);
-        detailFragment.SetBackGroundColor(Color.GRAY);
+
+        // TODO: move to layout or to detail fragment implementation
+        detailFragment.setBackGroundColor(Color.GRAY);
     }
 
-    /**
-     * Callback method from {@link CardListFragment.Callbacks}
-     * indicating that the item with the given ID was selected.
-     */
+
+    // onItemSelected: ListFragment callback when list item selected
+    //  this method is part of the ListFragment.Callbacks interface
     @Override
     public void onItemSelected(ParseObject obj) {
-        detailFragment.setCard(obj, useingLocalContent);
+        detailFragment.setCard(obj, usingLocalContent);
     }
 
+
+    // onCreateOptionsMenu: Create options menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -62,20 +81,21 @@ public class CardListActivity extends Activity
         return true;
     }
 
+    // onOptionsItemSelected: options menu handler
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_local_content) {
-            if (useingLocalContent) {
+            // toggle using local content flag and
+            // change options menu text
+            // TODO: Change to checkbox
+            if (usingLocalContent) {
                 item.setTitle("Use Local  Content");
-                useingLocalContent = false;
+                usingLocalContent = false;
                 listFragment.LoadRemoteCards();
             } else {
                 item.setTitle("Use Remote Content");
-                useingLocalContent = true;
+                usingLocalContent = true;
                 listFragment.LoadLocalCards();
             }
 

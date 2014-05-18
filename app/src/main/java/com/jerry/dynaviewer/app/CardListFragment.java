@@ -5,6 +5,7 @@ import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.app.ListFragment;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -20,57 +21,24 @@ import com.parse.ParseQuery;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-/**
- * A list fragment representing a list of Cards. This fragment
- * also supports tablet devices by allowing list items to be given an
- * 'activated' state upon selection. This helps indicate which item is
- * currently being viewed in a {@link CardDetailFragment}.
- * <p>
- * Activities containing this fragment MUST implement the {@link Callbacks}
- * interface.
- */
+// CardListFragment: Fragment which shows list of DynaCards
+
 public class CardListFragment extends ListFragment {
 
-    /**
-     * The serialization (saved instance state) Bundle key representing the
-     * activated item position. Only used on tablets.
-     */
-    private static final String STATE_ACTIVATED_POSITION = "activated_position";
-
-    /**
-     * The fragment's current callback object, which is notified of list item
-     * clicks.
-     */
-    private Callbacks mCallbacks = sDummyCallbacks;
-
-    /**
-     * The current activated item position. Only used on tablets.
-     */
-    private int mActivatedPosition = ListView.INVALID_POSITION;
-
-    /**
-     * A callback interface that all activities containing this fragment must
-     * implement. This mechanism allows activities to be notified of item
-     * selections.
-     */
-    public interface Callbacks {
-        /**
-         * Callback for when an item has been selected.
-         */
+    // callback when item changes
+    public interface OnItemChanged {
         public void onItemSelected(ParseObject obj);
     }
 
-    /**
-     * A dummy implementation of the {@link Callbacks} interface that does
-     * nothing. Used only when this fragment is not attached to an activity.
-     */
-    private static Callbacks sDummyCallbacks = new Callbacks() {
-        @Override
-        public void onItemSelected(ParseObject obj) {
-        }
-    };
+    private static final String STATE_ACTIVATED_POSITION = "activated_position";
+    private OnItemChanged mOnItemChanged = null;
+    private int mActivatedPosition = ListView.INVALID_POSITION;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -80,12 +48,17 @@ public class CardListFragment extends ListFragment {
     }
 
     // TODO: use adapter from ParseObject instead of separate array.
-    ArrayList<ParseObject> cardNames = new ArrayList<ParseObject>();
+    // note: at present these must be in the same order
+    Map<String, ParseObject> cardInfo = new HashMap<String, ParseObject>();
     ArrayList<String> cardTitles = new ArrayList<String>();
+
     ArrayAdapter<String> adapter;
 
+
+    // LoadLocalCards: Load names of list items from local catds
+    // TODO: card source should be provided via interface
     public void LoadLocalCards() {
-        cardNames.clear();
+        cardInfo.clear();
         cardTitles.clear();
 
         AssetManager assets = getActivity().getApplicationContext().getAssets();
@@ -94,9 +67,9 @@ public class CardListFragment extends ListFragment {
             for (String item : files) {
                 if (item.toLowerCase().endsWith(".xml"))
                 {
-                    ParseObject obj = new ParseObject(ParseKeys.PARSE_CLASS);
-                    obj.put(ParseKeys.PARSE_KEY_FILENAME, item);
-                    cardNames.add(obj);
+                    ParseObject obj = new ParseObject(ParseKeys.ParseObjectClass);
+                    obj.put(ParseKeys.ParseKeyFilename, item);
+                    cardInfo.put(item, obj);
                     cardTitles.add(item);
                 }
             }
@@ -106,51 +79,43 @@ public class CardListFragment extends ListFragment {
         if (adapter!=null) {
             System.out.println("LoadRemoteCards::SetAdapter");
             System.out.println("cardTitles: " + Integer.toString(cardTitles.size()));
-            System.out.println("cardNames: " + Integer.toString(cardNames.size()));
+            System.out.println("cardNames: " + Integer.toString(cardInfo.size()));
 
             adapter.notifyDataSetChanged();
             ChangeSelectedItem(0);
         }
     }
 
+
+    // LoadLocalCards: Load names of list items from remote catds
+    // TODO: card source should be provided via interface
     public void LoadRemoteCards() {
         System.out.println("LoadRemoteCards: ");
 
-        cardNames.clear();
+        cardInfo.clear();
         cardTitles.clear();
-
-//        final String[] parseKeys = {
-//                "i5BgALrYsg", "QlEt2tO2Bq", "quDe6WaRr5", "B07he3MbB0","t9pI4llTpR",
-//                "7An7eE5VW2","1uRkcj2V4C","cznt6i2tPG","kU1GPSs2qt","4pgzNZT10m",
-//                "p6WqnxlrhX","3PC5m6vB8C","6Nz5ELxdaY","2vtZVBvWDW","O5gkXfjoOB",
-//                "vTH1xzdiPs","ay6xRBkkuJ","wJY7GEPJYK","I36CnLBxQL","r7hTSWKYEy",
-//                "NrxGMMgTuC","EnLmMfcYef","5Z2UCtqdwj","mVivHmDBOQ","tYeeCFULxY",
-//                "GHRWiLOpKW","Lye9FWyhYu","i2FyackdQI","Z8rziqiP0w","EpGgYNVBwu",
-//                "bUWZlPstDg","HmZvaFXKpl","i9bjUAUxst" };
-//        for (String name  : parseKeys) {
-//            cardNames.add(name);
-//        }
 
         System.out.println("LoadRemoteCards:...");
 
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(ParseKeys.PARSE_CLASS);
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(ParseKeys.ParseObjectClass);
         query.selectKeys(Arrays.asList("facility", "index"));
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> results, ParseException e) {
                 if (e == null) {
                     for (ParseObject obj : results) {
-                        cardNames.add(obj);
-                        String facility = obj.getString(ParseKeys.PARSE_KEY_FACILITY);
-                        Number index = obj.getNumber(ParseKeys.PARSE_KEY_INDEX);
+                        String facility = obj.getString(ParseKeys.ParseKeyFacility);
+                        Number index = obj.getNumber(ParseKeys.ParseKeyIndex);
                         String title = facility + ":" + index.toString();
                         cardTitles.add(title);
+                        cardInfo.put(title, obj);
                     }
 
                     if (adapter!=null) {
                         System.out.println("LoadRemoteCards::SetAdapter");
                         System.out.println("cardTitles: " + Integer.toString(cardTitles.size()));
-                        System.out.println("cardNames: " + Integer.toString(cardNames.size()));
+                        System.out.println("cardNames: " + Integer.toString(cardInfo.size()));
 
+                        Collections.sort(cardTitles);
                         adapter.notifyDataSetChanged();
                         ChangeSelectedItem(0);
                     }
@@ -163,8 +128,8 @@ public class CardListFragment extends ListFragment {
         });
     }
 
-    // called on fragment creation
 
+    // onCreate: called on fragment creation
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -187,48 +152,48 @@ public class CardListFragment extends ListFragment {
             }
         };
 
+        // set the array adapter
         setListAdapter(adapter);
     }
 
-    // called to set the current item in the list view
-    // calls back to report change
 
-    void ChangeSelectedItem(int item)
+    // onCreateView: overridden to provide opportunity to set list view to
+    //  to single selection mode (listview maintains highlighted selection)
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        System.out.println("ChangeSelectedItem: " + Integer.toString(item));
-        System.out.println("cardTitles: " + Integer.toString(cardTitles.size()));
-        System.out.println("cardNames: " + Integer.toString(cardNames.size()));
-        getListView().setSelection(item);
-        setActivatedPosition(item);
-        ParseObject obj = cardNames.get(item);
-        mCallbacks.onItemSelected(obj);
+        View view = super.onCreateView(inflater, container, savedInstanceState);
+
+        ListView listView = (ListView) view.findViewById(android.R.id.list);
+        listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+        return view;
     }
 
 
     // called when the fragment is attached to an activity
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
         // Activities containing this fragment must implement its callbacks.
-        if (!(activity instanceof Callbacks)) {
+        if (!(activity instanceof OnItemChanged)) {
             throw new IllegalStateException("Activity must implement fragment's callbacks.");
         }
 
-        mCallbacks = (Callbacks) activity;
+        mOnItemChanged = (OnItemChanged) activity;
         //LoadRemoteCards();
     }
 
 
-    // called when the fragment is dettached to an activity
-
+    // called when the fragment is detached to an activity
     @Override
     public void onDetach() {
         super.onDetach();
 
-        // Reset the active callbacks interface to the dummy implementation.
-        mCallbacks = sDummyCallbacks;
+        // no one to call back to
+        mOnItemChanged = null;
     }
 
 
@@ -239,7 +204,10 @@ public class CardListFragment extends ListFragment {
 
         // Notify the active callbacks interface (the activity, if the
         // fragment is attached to one) that an item has been selected.
-        mCallbacks.onItemSelected(cardNames.get(position));
+        if (mOnItemChanged!=null) {
+            String title = cardTitles.get(position);
+            mOnItemChanged.onItemSelected(cardInfo.get(title));
+        }
     }
 
     // save state so that when resumed the same item is selected
@@ -252,25 +220,27 @@ public class CardListFragment extends ListFragment {
         }
     }
 
-    /**
-     * Turns on activate-on-click mode. When this mode is on, list items will be
-     * given the 'activated' state when touched.
-     */
-    public void setActivateOnItemClick(boolean activateOnItemClick) {
-        // When setting CHOICE_MODE_SINGLE, ListView will automatically
-        // give items the 'activated' state when touched.
-        getListView().setChoiceMode(activateOnItemClick
-                ? ListView.CHOICE_MODE_SINGLE
-                : ListView.CHOICE_MODE_NONE);
-    }
 
-    private void setActivatedPosition(int position) {
+    // ChangeSelectedItem: change the list view selection
+    public void ChangeSelectedItem(int position)
+    {
+        System.out.println("ChangeSelectedItem: " + Integer.toString(position));
+        System.out.println("cardTitles: " + Integer.toString(cardTitles.size()));
+        System.out.println("cardNames: " + Integer.toString(cardInfo.size()));
+
         if (position == ListView.INVALID_POSITION) {
+            // clear selection on invalid position
             getListView().setItemChecked(mActivatedPosition, false);
         } else {
+            // call back if change card
             getListView().setItemChecked(position, true);
+            if (mOnItemChanged!=null) {
+                String title = cardTitles.get(position);
+                mOnItemChanged.onItemSelected(cardInfo.get(title));
+            }
         }
 
+        getListView().setSelection(position);
         mActivatedPosition = position;
     }
 }

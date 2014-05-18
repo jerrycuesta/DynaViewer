@@ -24,45 +24,64 @@ import com.parse.ParseQuery;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class CardDetailFragment extends Fragment {
-    /**
-     * The fragment argument representing the item ID that this fragment
-     * represents.
-     */
-    public static final String ARG_ITEM_ID = "item_id";
 
-    private XYPlot mPlot;
-    private String mId;
-    private String status = "";
-    private TextView mMessageView;
+    private XYPlot mPlot;               // the plot
+    private String mId;                 // card id
+    private String mStatusText = "";    // status message
+    private TextView mMessageView;      // textView for status message.
 
+
+    // default constructor for fragment manager use
     public CardDetailFragment() {
     }
 
-    // called to set the current item in the list view
 
-    void SetBackGroundColor(int c) {
+    // setBackGroundColor: set graph view color
+    // TODO: do in layout?
+    void setBackGroundColor(int c) {
         getView().setBackgroundColor(c);
     }
 
 
+    // onCreateView: create the view for the fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_card_detail, container, false);
 
+        // the plot view
         mPlot = (XYPlot) rootView.findViewById(R.id.cardPlot);
         mPlot.getGraphWidget().getGridBackgroundPaint().setColor(Color.GRAY);
 
+        // the message view. hide it.
         mMessageView = (TextView) rootView.findViewById(R.id.cardStatus);
         mMessageView.setVisibility(View.INVISIBLE);
 
         return rootView;
     }
 
+
+    // onCardLoaded: perform post card load work
+    private void onCardLoaded(DynaCard card)
+    {
+        mPlot.clear();
+        if (!mStatusText.equals(""))
+        {
+            mMessageView.setText(mStatusText);
+            mMessageView.setVisibility(View.VISIBLE);
+        }
+        else {
+            PlotCard(card);
+        }
+        mPlot.redraw();
+
+    }
+
+
+    // LoadCardTask: AsyncTask to load card from local file
     private class LoadCardTask extends AsyncTask<String, Void, DynaCard> {
         @Override
         protected DynaCard doInBackground(String... urls) {
@@ -78,7 +97,7 @@ public class CardDetailFragment extends Fragment {
                 msg.append(getString(R.string.error_msg));
                 msg.append(System.getProperty ("line.separator"));
                 msg.append(ex.getMessage());
-                status = msg.toString();
+                mStatusText = msg.toString();
                 return null;
             }
         }
@@ -89,32 +108,21 @@ public class CardDetailFragment extends Fragment {
         }
     }
 
-    private void onCardLoaded(DynaCard card)
-    {
-        mPlot.clear();
-        if (!status.equals(""))
-        {
-            mMessageView.setText(status);
-            mMessageView.setVisibility(View.VISIBLE);
-        }
-        else {
-            PlotCard(card);
-        }
-        mPlot.redraw();
 
-    }
-
+    //  setCard: set the current card
+    //      isLocal: indicate if local or remote card
+    //              TODO (change to enum)
     public void setCard(ParseObject obj, boolean isLocal)
     {
         if (isLocal)
-            mId = obj.getString(ParseKeys.PARSE_KEY_FILENAME);
+            mId = obj.getString(ParseKeys.ParseKeyFilename);
         else
             mId = obj.getObjectId();
 
         mPlot.setTitle(getString(R.string.surface_card) + " " +  mId);
 
         mMessageView.setVisibility(View.INVISIBLE);
-        status = "";
+        mStatusText = "";
 
         if (isLocal) {
             LoadCardTask task = new LoadCardTask();
@@ -137,36 +145,19 @@ public class CardDetailFragment extends Fragment {
                             msg.append(getString(R.string.error_msg));
                             msg.append(System.getProperty ("line.separator"));
                             msg.append(ex.getMessage());
-                            status = msg.toString();
+                            mStatusText = msg.toString();
                         }
                     } else {
-                        status = e.getMessage();
+                        mStatusText = e.getMessage();
                     }
                 }
             });
         }
     }
 
-//    private class LoadCardTaskSync
-//    {
-//        protected void Load(String Filename) {
-//            AssetManager assets = getActivity().getApplicationContext().getAssets();
-//            DynaCard card = new DynaCard("");
-//            try {
-//                InputStream inString = assets.open(Filename);
-//                card.Load(inString);
-//                StringBuilder line = new StringBuilder("Dynacard: ");
-//            } catch (Exception ex) {
-//                // TODO: propogate error
-//                //Toast.makeText(getActivity().getApplicationContext(), "Exception loading card " + mItem, Toast.LENGTH_SHORT).show();
-//            }
-//            PlotCard(card);
-//        }
-//    }
 
     // Plot the card
-
-    void PlotCard(DynaCard card)
+    private void PlotCard(DynaCard card)
     {
         Context context = getActivity();
 
@@ -199,7 +190,6 @@ public class CardDetailFragment extends Fragment {
                 new LineAndPointFormatter(Color.rgb(0, 0, 0), Color.rgb(128, 128, 128),
                                             null, null)
         );
-
 
         // reduce the number of range labels
         mPlot.setTicksPerRangeLabel(3);
