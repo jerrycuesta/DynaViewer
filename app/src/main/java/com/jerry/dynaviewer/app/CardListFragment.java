@@ -1,6 +1,7 @@
 package com.jerry.dynaviewer.app;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -21,7 +22,9 @@ import com.parse.ParseQuery;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,13 +67,16 @@ public class CardListFragment extends ListFragment {
         AssetManager assets = getActivity().getApplicationContext().getAssets();
         try {
             String[] files = assets.list("");
+            Calendar calendar = Calendar.getInstance();
             for (String item : files) {
                 if (item.toLowerCase().endsWith(".xml"))
                 {
                     ParseObject obj = new ParseObject(ParseKeys.ParseObjectClass);
                     obj.put(ParseKeys.ParseKeyFilename, item);
+                    obj.put(ParseKeys.ParseKeyTimeStamp, calendar.getTime());
                     cardInfo.put(item, obj);
                     cardTitles.add(item);
+                    calendar.add(Calendar.SECOND, 1);
                 }
             }
         } catch (Exception ex) {
@@ -98,7 +104,7 @@ public class CardListFragment extends ListFragment {
         System.out.println("LoadRemoteCards:...");
 
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(ParseKeys.ParseObjectClass);
-        query.selectKeys(Arrays.asList("facility", "index"));
+        query.selectKeys(Arrays.asList("facility", "index", "timestamp"));
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> results, ParseException e) {
                 if (e == null) {
@@ -143,14 +149,20 @@ public class CardListFragment extends ListFragment {
 
             // override getView to return the correct view
             @Override
-            public View getView(int position, View convertView,
-                                ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                TextView textView = (TextView) view.findViewById(android.R.id.text1);
-                textView.setTextColor(Color.WHITE);
-                return view;
-            }
-        };
+            public View getView(int position, View convertView, ViewGroup parent) {
+
+                LayoutInflater inflater = (LayoutInflater) getActivity()
+                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                View rowView = inflater.inflate(R.layout.list_item_detail, parent, false);
+                TextView textView1 = (TextView) rowView.findViewById(R.id.listItemFirstLine);
+                TextView textView2 = (TextView) rowView.findViewById(R.id.listItemSecondLine);
+                String title = cardTitles.get(position);
+                textView1.setText(title);
+                ParseObject item = cardInfo.get(title);
+                Date date = item.getDate(ParseKeys.ParseKeyTimeStamp);
+                textView2.setText(date.toString());
+                return rowView;
+        }};
 
         // set the array adapter
         setListAdapter(adapter);
@@ -187,7 +199,7 @@ public class CardListFragment extends ListFragment {
     }
 
 
-    // called when the fragment is detached to an activity
+    // called when the fragment is detached from an activity
     @Override
     public void onDetach() {
         super.onDetach();

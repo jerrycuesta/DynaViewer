@@ -9,5 +9,6 @@ public class ParseKeys {
     public static String ParseObjectClass = "DynaCard";
     public static String ParseKeyFilename = "filename";
     public static String ParseKeyFacility = "facility";
+    public static String ParseKeyTimeStamp = "timestamp";
     public static String ParseKeyIndex = "index";
 }

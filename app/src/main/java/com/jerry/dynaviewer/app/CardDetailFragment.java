@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
 import com.androidplot.xy.SimpleXYSeries;
@@ -163,12 +164,32 @@ public class CardDetailFragment extends Fragment {
 
         ArrayList<Number> xValues = new ArrayList<Number>();
         ArrayList<Number> yValues = new ArrayList<Number>();
+        
+        float minPos = Float.MAX_VALUE;
+        float maxPos = Float.MIN_VALUE;
+        float minLoad = Float.MAX_VALUE;
+        float maxLoad = Float.MIN_VALUE;
 
         for (int i=0; i<card.SurfacePoints.size(); i++)
         {
-            xValues.add(card.SurfacePoints.get(i).pos);
-            yValues.add(card.SurfacePoints.get(i).load);
+            float pos = card.SurfacePoints.get(i).pos;
+            xValues.add(pos);
+            minPos = Math.min(minPos, pos);
+            maxPos = Math.max(maxPos, pos);
+
+            float load = card.SurfacePoints.get(i).load;
+            yValues.add(load);
+            minLoad = Math.min(minLoad, load);
+            maxLoad = Math.max(maxLoad, load);
         }
+
+        mPlot.setDomainBoundaries(  minPos-(Math.abs(minPos*0.1f)),
+                                    maxPos+(Math.abs(maxPos*0.1f)),
+                                    BoundaryMode.FIXED);
+        mPlot.setRangeBoundaries (  minLoad-(Math.abs(minLoad*0.1f)),
+                                    maxLoad+(Math.abs(maxLoad*0.1f)),
+                                    BoundaryMode.FIXED);
+        mPlot.redraw();
 
         final String seriesTitle = "";
 
